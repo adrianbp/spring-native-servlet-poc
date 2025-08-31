@@ -4,9 +4,6 @@ FROM ghcr.io/graalvm/native-image:ol8-java17-22.3.3 AS builder
 # Set working directory
 WORKDIR /app
 
-# Install necessary tools for Maven wrapper
-RUN microdnf install gzip tar && microdnf clean all
-
 # Copy Maven files
 COPY pom.xml .
 COPY mvnw .
