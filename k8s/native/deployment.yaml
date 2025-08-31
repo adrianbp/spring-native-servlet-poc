@@ -26,7 +26,7 @@ spec:
     spec:
       containers:
       - name: spring-native-app
-        image: ghcr.io/YOUR_USERNAME/native-jpa-servlet-native:latest
+        image: ghcr.io/adrianbp/spring-native-servlet-poc-native:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
