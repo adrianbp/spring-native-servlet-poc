@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: spring-jar
+  labels:
+    name: spring-jar
+    app.kubernetes.io/name: spring-jar
+    app.kubernetes.io/component: namespace

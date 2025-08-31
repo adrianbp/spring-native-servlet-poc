@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spring-native-app
+  namespace: spring-native
+  labels:
+    app: spring-native-app
+    version: native
+    tier: backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: spring-native-app
+      version: native
+  template:
+    metadata:
+      labels:
+        app: spring-native-app
+        version: native
+        tier: backend
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/actuator/prometheus"
+    spec:
+      containers:
+      - name: spring-native-app
+        image: ghcr.io/YOUR_USERNAME/native-jpa-servlet-native:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "k8s"
+        - name: SPRING_DATASOURCE_URL
+          value: "jdbc:h2:mem:testdb"
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /api/users/health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /api/users/health
+            port: 8080
+          initialDelaySeconds: 3
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        startupProbe:
+          httpGet:
+            path: /api/users/health
+            port: 8080
+          initialDelaySeconds: 2
+          periodSeconds: 3
+          timeoutSeconds: 3
+          failureThreshold: 10
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
