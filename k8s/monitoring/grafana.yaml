@@ -30,6 +30,8 @@ spec:
           mountPath: /etc/grafana/provisioning/dashboards
         - name: grafana-dashboards
           mountPath: /var/lib/grafana/dashboards
+        - name: grafana-performance-dashboard
+          mountPath: /var/lib/grafana/dashboards/performance
       volumes:
       - name: grafana-datasources
         configMap:
@@ -40,6 +42,9 @@ spec:
       - name: grafana-dashboards
         configMap:
           name: grafana-dashboards
+      - name: grafana-performance-dashboard
+        configMap:
+          name: grafana-performance-dashboard
 ---
 apiVersion: v1
 kind: Service

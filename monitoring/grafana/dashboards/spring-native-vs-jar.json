@@ -1,0 +1,567 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Spring Native vs JAR - Performance Comparison",
+    "tags": ["spring", "native", "jar", "performance"],
+    "style": "dark",
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "🚀 Application Startup Time",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "application_ready_time_seconds{job=\"spring-native-app\"}",
+            "legendFormat": "Native Startup",
+            "refId": "A"
+          },
+          {
+            "expr": "application_ready_time_seconds{job=\"spring-jar-app\"}",
+            "legendFormat": "JAR Startup",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "displayMode": "list",
+              "orientation": "horizontal"
+            },
+            "mappings": [],
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 10
+                }
+              ]
+            },
+            "unit": "s"
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": 2,
+        "title": "💾 Memory Usage Comparison",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "jvm_memory_used_bytes{area=\"heap\", job=\"spring-native-app\"} / 1024 / 1024",
+            "legendFormat": "Native Heap (MB)",
+            "refId": "A"
+          },
+          {
+            "expr": "jvm_memory_used_bytes{area=\"heap\", job=\"spring-jar-app\"} / 1024 / 1024",
+            "legendFormat": "JAR Heap (MB)",
+            "refId": "B"
+          },
+          {
+            "expr": "jvm_memory_used_bytes{area=\"nonheap\", job=\"spring-native-app\"} / 1024 / 1024",
+            "legendFormat": "Native Non-Heap (MB)",
+            "refId": "C"
+          },
+          {
+            "expr": "jvm_memory_used_bytes{area=\"nonheap\", job=\"spring-jar-app\"} / 1024 / 1024",
+            "legendFormat": "JAR Non-Heap (MB)",
+            "refId": "D"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "linear",
+              "barAlignment": 0,
+              "lineWidth": 1,
+              "fillOpacity": 0.1,
+              "gradientMode": "none",
+              "spanNulls": false,
+              "insertNulls": false,
+              "showPoints": "auto",
+              "pointSize": 5
+            },
+            "mappings": [],
+            "unit": "decbytes"
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 0
+        }
+      },
+      {
+        "id": 3,
+        "title": "⚡ CPU Usage",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(process_cpu_seconds_total{job=\"spring-native-app\"}[5m]) * 100",
+            "legendFormat": "Native CPU %",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(process_cpu_seconds_total{job=\"spring-jar-app\"}[5m]) * 100",
+            "legendFormat": "JAR CPU %",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "linear",
+              "barAlignment": 0,
+              "lineWidth": 2,
+              "fillOpacity": 0.1,
+              "gradientMode": "none",
+              "spanNulls": false,
+              "insertNulls": false,
+              "showPoints": "auto",
+              "pointSize": 5
+            },
+            "mappings": [],
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 50
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            },
+            "unit": "percent"
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 8
+        }
+      },
+      {
+        "id": 4,
+        "title": "🗑️ Garbage Collection (JAR only)",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(jvm_gc_collection_seconds_sum{job=\"spring-jar-app\"}[5m])",
+            "legendFormat": "GC Time Rate - {{name}}",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(jvm_gc_collection_seconds_count{job=\"spring-jar-app\"}[5m])",
+            "legendFormat": "GC Count Rate - {{name}}",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "linear",
+              "barAlignment": 0,
+              "lineWidth": 1,
+              "fillOpacity": 0.1,
+              "gradientMode": "none",
+              "spanNulls": false,
+              "insertNulls": false,
+              "showPoints": "auto",
+              "pointSize": 5
+            },
+            "mappings": [],
+            "unit": "s"
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 8
+        }
+      },
+      {
+        "id": 5,
+        "title": "🚦 HTTP Throughput (Requests/sec)",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(http_server_requests_seconds_count{job=\"spring-native-app\"}[5m])",
+            "legendFormat": "Native RPS - {{method}} {{uri}}",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(http_server_requests_seconds_count{job=\"spring-jar-app\"}[5m])",
+            "legendFormat": "JAR RPS - {{method}} {{uri}}",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "linear",
+              "barAlignment": 0,
+              "lineWidth": 2,
+              "fillOpacity": 0.2,
+              "gradientMode": "none",
+              "spanNulls": false,
+              "insertNulls": false,
+              "showPoints": "auto",
+              "pointSize": 5
+            },
+            "mappings": [],
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 100
+                },
+                {
+                  "color": "red",
+                  "value": 500
+                }
+              ]
+            },
+            "unit": "reqps"
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 16
+        }
+      },
+      {
+        "id": 6,
+        "title": "⏱️ Average Response Time",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(http_server_requests_seconds_sum{job=\"spring-native-app\"}[5m]) / rate(http_server_requests_seconds_count{job=\"spring-native-app\"}[5m]) * 1000",
+            "legendFormat": "Native Avg Response (ms) - {{method}} {{uri}}",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(http_server_requests_seconds_sum{job=\"spring-jar-app\"}[5m]) / rate(http_server_requests_seconds_count{job=\"spring-jar-app\"}[5m]) * 1000",
+            "legendFormat": "JAR Avg Response (ms) - {{method}} {{uri}}",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "linear",
+              "barAlignment": 0,
+              "lineWidth": 2,
+              "fillOpacity": 0.1,
+              "gradientMode": "none",
+              "spanNulls": false,
+              "insertNulls": false,
+              "showPoints": "auto",
+              "pointSize": 5
+            },
+            "mappings": [],
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 100
+                },
+                {
+                  "color": "red",
+                  "value": 500
+                }
+              ]
+            },
+            "unit": "ms"
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 16
+        }
+      },
+      {
+        "id": 7,
+        "title": "📊 HTTP Status Codes",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(http_server_requests_seconds_count{job=\"spring-native-app\", status=~\"2..\"}[5m])",
+            "legendFormat": "Native 2xx",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(http_server_requests_seconds_count{job=\"spring-jar-app\", status=~\"2..\"}[5m])",
+            "legendFormat": "JAR 2xx",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(http_server_requests_seconds_count{job=\"spring-native-app\", status=~\"4..\"}[5m])",
+            "legendFormat": "Native 4xx",
+            "refId": "C"
+          },
+          {
+            "expr": "rate(http_server_requests_seconds_count{job=\"spring-jar-app\", status=~\"4..\"}[5m])",
+            "legendFormat": "JAR 4xx",
+            "refId": "D"
+          },
+          {
+            "expr": "rate(http_server_requests_seconds_count{job=\"spring-native-app\", status=~\"5..\"}[5m])",
+            "legendFormat": "Native 5xx",
+            "refId": "E"
+          },
+          {
+            "expr": "rate(http_server_requests_seconds_count{job=\"spring-jar-app\", status=~\"5..\"}[5m])",
+            "legendFormat": "JAR 5xx",
+            "refId": "F"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "linear",
+              "barAlignment": 0,
+              "lineWidth": 1,
+              "fillOpacity": 0.1,
+              "gradientMode": "none",
+              "spanNulls": false,
+              "insertNulls": false,
+              "showPoints": "auto",
+              "pointSize": 5
+            },
+            "mappings": [],
+            "unit": "reqps"
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 24
+        }
+      },
+      {
+        "id": 8,
+        "title": "🎯 Performance Summary Stats",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "avg(jvm_memory_used_bytes{area=\"heap\", job=\"spring-native-app\"}) / 1024 / 1024",
+            "legendFormat": "Native Avg Heap (MB)",
+            "refId": "A"
+          },
+          {
+            "expr": "avg(jvm_memory_used_bytes{area=\"heap\", job=\"spring-jar-app\"}) / 1024 / 1024",
+            "legendFormat": "JAR Avg Heap (MB)",
+            "refId": "B"
+          },
+          {
+            "expr": "avg(rate(http_server_requests_seconds_count{job=\"spring-native-app\"}[5m]))",
+            "legendFormat": "Native Avg RPS",
+            "refId": "C"
+          },
+          {
+            "expr": "avg(rate(http_server_requests_seconds_count{job=\"spring-jar-app\"}[5m]))",
+            "legendFormat": "JAR Avg RPS",
+            "refId": "D"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "displayMode": "list",
+              "orientation": "auto"
+            },
+            "mappings": [],
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                }
+              ]
+            }
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 32
+        }
+      },
+      {
+        "id": 9,
+        "title": "📈 JVM Threads",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "jvm_threads_current{job=\"spring-native-app\"}",
+            "legendFormat": "Native Threads",
+            "refId": "A"
+          },
+          {
+            "expr": "jvm_threads_current{job=\"spring-jar-app\"}",
+            "legendFormat": "JAR Threads",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "linear",
+              "barAlignment": 0,
+              "lineWidth": 1,
+              "fillOpacity": 0.1,
+              "gradientMode": "none",
+              "spanNulls": false,
+              "insertNulls": false,
+              "showPoints": "auto",
+              "pointSize": 5
+            },
+            "mappings": [],
+            "unit": "short"
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 40
+        }
+      },
+      {
+        "id": 10,
+        "title": "🔄 JVM Classes Loaded",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "jvm_classes_currently_loaded{job=\"spring-native-app\"}",
+            "legendFormat": "Native Classes",
+            "refId": "A"
+          },
+          {
+            "expr": "jvm_classes_currently_loaded{job=\"spring-jar-app\"}",
+            "legendFormat": "JAR Classes",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "linear",
+              "barAlignment": 0,
+              "lineWidth": 1,
+              "fillOpacity": 0.1,
+              "gradientMode": "none",
+              "spanNulls": false,
+              "insertNulls": false,
+              "showPoints": "auto",
+              "pointSize": 5
+            },
+            "mappings": [],
+            "unit": "short"
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 40
+        }
+      }
+    ],
+    "time": {
+      "from": "now-30m",
+      "to": "now"
+    },
+    "timepicker": {},
+    "templating": {
+      "list": []
+    },
+    "annotations": {
+      "list": [
+        {
+          "builtIn": 1,
+          "datasource": "-- Grafana --",
+          "enable": true,
+          "hide": true,
+          "iconColor": "rgba(0, 211, 255, 1)",
+          "name": "Annotations & Alerts",
+          "type": "dashboard"
+        }
+      ]
+    },
+    "refresh": "10s",
+    "schemaVersion": 27,
+    "version": 0,
+    "links": []
+  }
+}

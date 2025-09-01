@@ -302,3 +302,116 @@ resource "aws_ecr_repository" "native" {
     Name = "${var.project_name}-native"
   }
 }
+
+# Security Group for GitHub Actions Runner
+resource "aws_security_group" "github_runner" {
+  name_prefix = "${var.project_name}-github-runner-"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.project_name}-github-runner-sg"
+  }
+}
+
+# IAM Role for GitHub Actions Runner
+resource "aws_iam_role" "github_runner" {
+  name = "${var.project_name}-github-runner-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      }
+    ]
+  })
+
+  tags = {
+    Name = "${var.project_name}-github-runner-role"
+  }
+}
+
+# IAM Policy for GitHub Actions Runner (ECR access)
+resource "aws_iam_role_policy" "github_runner_ecr" {
+  name = "${var.project_name}-github-runner-ecr-policy"
+  role = aws_iam_role.github_runner.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ecr:GetAuthorizationToken",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage",
+          "ecr:PutImage",
+          "ecr:InitiateLayerUpload",
+          "ecr:UploadLayerPart",
+          "ecr:CompleteLayerUpload"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+# IAM Instance Profile for GitHub Actions Runner
+resource "aws_iam_instance_profile" "github_runner" {
+  name = "${var.project_name}-github-runner-profile"
+  role = aws_iam_role.github_runner.name
+}
+
+# Key Pair for GitHub Actions Runner
+resource "aws_key_pair" "github_runner" {
+  key_name   = "${var.project_name}-github-runner-key"
+  public_key = file("~/.ssh/id_rsa.pub")  # Ajuste o caminho se necessário
+}
+
+# GitHub Actions Runner EC2 Instance (Graviton)
+resource "aws_instance" "github_runner" {
+  ami                    = "ami-0bca608fe0242d666"  # Ubuntu 22.04 ARM64
+  instance_type          = "t4g.large"              # Graviton2
+  key_name              = aws_key_pair.github_runner.key_name
+  vpc_security_group_ids = [aws_security_group.github_runner.id]
+  subnet_id             = aws_subnet.public[0].id
+  iam_instance_profile  = aws_iam_instance_profile.github_runner.name
+
+  associate_public_ip_address = true
+
+  user_data = base64encode(templatefile("${path.module}/github-runner-setup.sh", {
+    github_repo  = "https://github.com/adrianbp/spring-native-servlet-poc"
+    runner_name  = "${var.project_name}-graviton-runner"
+  }))
+
+  root_block_device {
+    volume_type = "gp3"
+    volume_size = 30
+    encrypted   = true
+  }
+
+  tags = {
+    Name = "${var.project_name}-github-runner"
+    Type = "self-hosted-runner"
+    Arch = "arm64"
+  }
+}

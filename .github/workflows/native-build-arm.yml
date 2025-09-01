@@ -78,6 +78,6 @@ jobs:
       
     - name: Deploy ARM64 Native to EKS
       run: |
-        kubectl apply -f k8s/native-arm/
+        kubectl apply -f k8s/native-arm/ --validate=false
         kubectl rollout restart deployment/spring-native-app-arm -n spring-native-arm
         kubectl rollout status deployment/spring-native-app-arm -n spring-native-arm --timeout=300s

@@ -72,5 +72,40 @@ output "next_steps" {
 4. Access ECR repositories:
    - JAR: ${aws_ecr_repository.jar.repository_url}
    - Native: ${aws_ecr_repository.native.repository_url}
+5. Configure GitHub Runner: ssh -i ~/.ssh/id_rsa ubuntu@${aws_instance.github_runner.public_ip}
+EOT
+}
+
+output "github_runner_ip" {
+  description = "Public IP address of the GitHub Actions runner"
+  value       = aws_instance.github_runner.public_ip
+}
+
+output "github_runner_ssh_command" {
+  description = "SSH command to connect to the GitHub runner"
+  value       = "ssh -i ~/.ssh/id_rsa ubuntu@${aws_instance.github_runner.public_ip}"
+}
+
+output "github_runner_setup_instructions" {
+  description = "Instructions to setup GitHub Actions runner"
+  value = <<EOT
+🚀 GitHub Actions Self-hosted Runner (ARM64/Graviton) Setup:
+
+1. SSH to runner: ssh -i ~/.ssh/id_rsa ubuntu@${aws_instance.github_runner.public_ip}
+
+2. Go to: https://github.com/adrianbp/spring-native-servlet-poc/settings/actions/runners
+
+3. Click 'New self-hosted runner' -> Linux -> ARM64
+
+4. Copy the configuration command and run on the runner instance
+
+5. Install as service:
+   sudo ./svc.sh install ubuntu
+   sudo ./svc.sh start
+
+6. Update workflow to use: runs-on: [self-hosted, linux, arm64, graviton]
+
+Runner specs: t4g.medium (Graviton2, 2 vCPU, 4GB RAM)
+Cost: ~$24/month
 EOT
 }

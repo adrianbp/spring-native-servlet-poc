@@ -23,6 +23,18 @@ scrape_configs:
       - targets: ['spring-native:8080']
     scrape_interval: 10s
 
+  - job_name: 'spring-jar-arm'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['spring-jar-arm:8080']
+    scrape_interval: 10s
+
+  - job_name: 'spring-native-arm'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['spring-native-arm:8080']
+    scrape_interval: 10s
+
   - job_name: 'cadvisor'
     static_configs:
       - targets: ['cadvisor:8080']
