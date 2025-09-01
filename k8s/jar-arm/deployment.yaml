@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spring-jar-app-arm
+  namespace: spring-jar-arm
+  labels:
+    app: spring-jar-app-arm
+    version: jar
+    tier: backend
+    architecture: arm64
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spring-jar-app-arm
+      version: jar
+  template:
+    metadata:
+      labels:
+        app: spring-jar-app-arm
+        version: jar
+        tier: backend
+        architecture: arm64
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/actuator/prometheus"
+    spec:
+      nodeSelector:
+        kubernetes.io/arch: arm64
+      containers:
+      - name: spring-jar-app-arm
+        image: ghcr.io/adrianbp/spring-native-servlet-poc-jar-arm:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "k8s"
+        - name: SPRING_DATASOURCE_URL
+          value: "jdbc:h2:mem:testdb"
+        - name: ARCHITECTURE
+          value: "arm64"
+        - name: JAVA_TOOL_OPTIONS
+          value: "-XX:+UseG1GC -XX:MaxRAMPercentage=75.0"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /api/users/health
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /api/users/health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        startupProbe:
+          httpGet:
+            path: /api/users/health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 30

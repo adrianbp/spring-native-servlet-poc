@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: spring-jar-arm
+  labels:
+    name: spring-jar-arm
+    app.kubernetes.io/name: spring-jar-arm
+    app.kubernetes.io/part-of: spring-native-poc
+    architecture: arm64

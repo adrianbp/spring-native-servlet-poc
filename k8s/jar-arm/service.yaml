@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: spring-jar-app-arm-service
+  namespace: spring-jar-arm
+  labels:
+    app: spring-jar-app-arm
+    version: jar
+    architecture: arm64
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  selector:
+    app: spring-jar-app-arm
+    version: jar
