@@ -4,8 +4,11 @@ FROM ghcr.io/graalvm/native-image:ol8-java17-22.3.3 AS builder
 # Set working directory
 WORKDIR /app
 
-# Install necessary tools for Maven wrapper
-RUN microdnf install gzip tar && microdnf clean all
+# Install necessary tools for Maven wrapper and fix locale
+RUN microdnf install gzip tar which findutils && \
+    microdnf clean all && \
+    export LANG=C.UTF-8 && \
+    export LC_ALL=C.UTF-8
 
 # Copy Maven files
 COPY pom.xml .
@@ -15,8 +18,10 @@ COPY .mvn .mvn
 # Copy source code
 COPY src src
 
-# Build the application
-RUN ./mvnw clean package -DskipTests
+# Build the application with locale fix
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
+RUN chmod +x ./mvnw && ./mvnw clean package -DskipTests
 
 # Runtime stage
 FROM ghcr.io/graalvm/jdk:ol8-java17-22.3.3
