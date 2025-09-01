@@ -36,7 +36,7 @@ jobs:
 
   build-and-deploy-native-arm:
     name: Build and Deploy Native ARM64
-    runs-on: ubuntu-24.04-arm64
+    runs-on: [self-hosted, linux, arm64, graviton]
     needs: test
     if: github.ref == 'refs/heads/main'
     permissions:
@@ -46,21 +46,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Set up GraalVM JDK 17
-      uses: graalvm/setup-graalvm@v1
-      with:
-        java-version: '17'
-        distribution: 'graalvm'
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        native-image-job-reports: 'true'
-        
-    - name: Cache Maven dependencies
-      uses: actions/cache@v3
-      with:
-        path: ~/.m2
-        key: ${{ runner.os }}-arm64-m2-${{ hashFiles('**/pom.xml') }}
-        restore-keys: ${{ runner.os }}-arm64-m2
-        
     - name: Build native ARM64 binary
       run: mvn clean -Pnative native:compile
       
