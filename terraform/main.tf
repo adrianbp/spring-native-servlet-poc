@@ -244,6 +244,37 @@ resource "aws_eks_node_group" "main" {
   }
 }
 
+# EKS Node Group ARM64
+resource "aws_eks_node_group" "arm64" {
+  cluster_name    = aws_eks_cluster.main.name
+  node_group_name = "${var.project_name}-node-group-arm64"
+  node_role_arn   = aws_iam_role.node_group.arn
+  subnet_ids      = aws_subnet.private[*].id
+  instance_types  = ["m6g.medium", "m6g.large"]  # Graviton2 instances
+  ami_type        = "AL2_ARM_64"
+
+  scaling_config {
+    desired_size = 2
+    max_size     = 4
+    min_size     = 1
+  }
+
+  update_config {
+    max_unavailable = 1
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.node_group_amazon_eks_worker_node_policy,
+    aws_iam_role_policy_attachment.node_group_amazon_eks_cni_policy,
+    aws_iam_role_policy_attachment.node_group_amazon_ec2_container_registry_read_only,
+  ]
+
+  tags = {
+    Name = "${var.project_name}-node-group-arm64"
+    Architecture = "arm64"
+  }
+}
+
 # ECR Repository for JAR version
 resource "aws_ecr_repository" "jar" {
   name                 = "${var.project_name}-jar"
