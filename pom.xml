@@ -107,8 +107,10 @@
 									<goal>copy-runtime-agent</goal>
 								</goals>
 								<configuration>
-									<environmentUrl>${env.ENVIRONMENT_URL}</environmentUrl>
-									<apiToken>${env.API_TOKEN}</apiToken>
+									<agentDownload>
+										<environmentUrl>${env.ENVIRONMENT_URL}</environmentUrl>
+										<apiToken>${env.API_TOKEN}</apiToken>
+									</agentDownload>
 								</configuration>
 							</execution>
 						</executions>
