@@ -13,6 +13,11 @@ spec:
     matchLabels:
       app: spring-jar-app
       version: jar
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   template:
     metadata:
       labels:
@@ -24,6 +29,8 @@ spec:
         prometheus.io/port: "8080"
         prometheus.io/path: "/actuator/prometheus"
     spec:
+      nodeSelector:
+        kubernetes.io/arch: amd64
       containers:
       - name: spring-jar-app
         image: ghcr.io/adrianbp/spring-native-servlet-poc-jar:latest
@@ -71,4 +78,4 @@ spec:
           timeoutSeconds: 5
           failureThreshold: 6
       restartPolicy: Always
-      terminationGracePeriodSeconds: 30
+      terminationGracePeriodSeconds: 60

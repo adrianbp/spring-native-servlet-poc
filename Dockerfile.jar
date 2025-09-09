@@ -1,12 +1,13 @@
-# Dockerfile for JAR (GraalVM-based)
-FROM ghcr.io/graalvm/native-image:ol8-java17-22.3.3 AS builder
+# Dockerfile for JAR (Multi-architecture)
+FROM eclipse-temurin:17-jdk AS builder
 
 # Set working directory
 WORKDIR /app
 
-# Install necessary tools for Maven wrapper and fix locale
-RUN microdnf install gzip tar which findutils && \
-    microdnf clean all
+# Install necessary tools for Maven wrapper
+RUN apt-get update && apt-get install -y \
+    gzip tar findutils \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy Maven files
 COPY pom.xml .
@@ -22,10 +23,10 @@ ENV LC_ALL=C.UTF-8
 RUN chmod +x ./mvnw && ./mvnw clean package -DskipTests
 
 # Runtime stage
-FROM ghcr.io/graalvm/jdk:ol8-java17-22.3.3
+FROM eclipse-temurin:17-jre
 
 # Install curl for health checks
-RUN microdnf install curl && microdnf clean all
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user
 RUN groupadd -r spring && useradd -r -g spring spring
