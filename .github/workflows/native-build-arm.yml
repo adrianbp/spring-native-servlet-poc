@@ -9,6 +9,8 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: adrianbp/spring-native-servlet-poc-native-arm
+  ENVIRONMENT_URL: ${{ secrets.DYNATRACE_ENVIRONMENT_URL }}
+  API_TOKEN: ${{ secrets.DYNATRACE_API_TOKEN }}
 
 jobs:
   test:
