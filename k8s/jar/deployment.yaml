@@ -28,6 +28,8 @@ spec:
         prometheus.io/scrape: "true"
         prometheus.io/port: "8080"
         prometheus.io/path: "/actuator/prometheus"
+        dynakube.dynatrace.com/inject: "true"
+        opentelemetry.io/service-name: "spring-jar-app"
     spec:
       nodeSelector:
         kubernetes.io/arch: amd64
