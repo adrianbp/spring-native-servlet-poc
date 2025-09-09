@@ -75,38 +75,55 @@ jobs:
       run: chmod +x target/native-jpa-servlet
       
     - name: Log in to GitHub Container Registry
-      uses: docker/login-action@v3
-      with:
-        registry: ${{ env.REGISTRY }}
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-        
-    - name: Extract metadata
-      id: meta
-      uses: docker/metadata-action@v5
-      with:
-        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-        tags: |
-          type=ref,event=branch
-          type=ref,event=pr
-          type=sha,prefix={{branch}}-
-          type=raw,value=latest,enable={{is_default_branch}}
-          
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v3
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
       
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
+    - name: Generate Docker tags
+      id: docker_tags
+      run: |
+        # Define tags
+        DOCKER_TAGS=""
+        
+        # Add branch-based tag
+        if [[ "${{ github.ref }}" == refs/heads/* ]]; then
+          BRANCH=${GITHUB_REF#refs/heads/}
+          DOCKER_TAGS="ghcr.io/${{ env.IMAGE_NAME }}:${BRANCH}"
+        fi
+        
+        # Add PR-based tag
+        if [[ "${{ github.ref }}" == refs/pull/* ]]; then
+          PR=${GITHUB_REF#refs/pull/}
+          PR=${PR%/merge}
+          DOCKER_TAGS="${DOCKER_TAGS} ghcr.io/${{ env.IMAGE_NAME }}:pr-${PR}"
+        fi
+        
+        # Add SHA tag
+        SHA_SHORT=$(echo "${{ github.sha }}" | cut -c1-7)
+        if [[ -n "${BRANCH}" ]]; then
+          DOCKER_TAGS="${DOCKER_TAGS} ghcr.io/${{ env.IMAGE_NAME }}:${BRANCH}-${SHA_SHORT}"
+        fi
+        
+        # Add latest tag if default branch
+        if [[ "${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == "refs/heads/master" ]]; then
+          DOCKER_TAGS="${DOCKER_TAGS} ghcr.io/${{ env.IMAGE_NAME }}:latest"
+        fi
+        
+        echo "Generated tags: ${DOCKER_TAGS}"
+        echo "tags=${DOCKER_TAGS}" >> $GITHUB_OUTPUT
       
     - name: Build and push Docker image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: ./Dockerfile.native
-        push: true
-        platforms: linux/arm64
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
+      run: |
+        echo "Building Docker image..."
+        docker build -f Dockerfile.native -t ghcr.io/${{ env.IMAGE_NAME }}:latest .
+        
+        echo "Pushing Docker images with tags..."
+        for tag in ${{ steps.docker_tags.outputs.tags }}; do
+          echo "Tagging and pushing: $tag"
+          docker tag ghcr.io/${{ env.IMAGE_NAME }}:latest $tag
+          docker push $tag
+        done
+        
+        echo "Pushing latest tag..."
+        docker push ghcr.io/${{ env.IMAGE_NAME }}:latest
 
   deploy-native-arm:
     name: Deploy Native ARM64 to Kubernetes
