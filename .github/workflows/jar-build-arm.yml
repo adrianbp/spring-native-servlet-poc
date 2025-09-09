@@ -122,7 +122,7 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: .
-        file: ./Dockerfile.jar
+        file: ./Dockerfile
         platforms: linux/arm64
         push: true
         tags: ${{ steps.meta.outputs.tags }}
@@ -151,4 +151,4 @@ jobs:
       run: |
         kubectl apply -f k8s/jar-arm/
         kubectl rollout restart deployment/spring-jar-app-arm -n spring-jar-arm
-        kubectl rollout status deployment/spring-jar-app-arm -n spring-jar-arm --timeout=300s
+        kubectl rollout status deployment/spring-jar-app-arm -n spring-jar-arm --timeout=600s

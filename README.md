@@ -106,7 +106,7 @@ docker run -p 8080:8080 spring-native-app:latest
 ### Build JAR Image
 ```bash
 # Build Docker image (includes Maven build)
-docker build -f Dockerfile.jar -t spring-jar-app:latest .
+docker build -t spring-jar-app:latest .
 
 # Run container
 docker run -p 8080:8080 spring-jar-app:latest
