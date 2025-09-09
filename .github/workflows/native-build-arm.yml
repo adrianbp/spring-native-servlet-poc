@@ -34,14 +34,10 @@ jobs:
     - name: Run tests
       run: mvn clean test
 
-  build-and-deploy-native-arm:
-    name: Build and Deploy Native ARM64
+  build-native-arm:
+    name: Build Native ARM64 Image
     runs-on: [self-hosted, linux, arm64, graviton]
     needs: test
-    if: github.ref == 'refs/heads/main'
-    permissions:
-      contents: read
-      packages: write
     
     steps:
     - uses: actions/checkout@v4
@@ -49,23 +45,69 @@ jobs:
     - name: Build native ARM64 binary
       run: mvn clean -Pnative native:compile
       
+    - name: Upload native binary
+      uses: actions/upload-artifact@v4
+      with:
+        name: native-binary-arm
+        path: target/native-jpa-servlet
+        retention-days: 5
+
+  build-docker-native-arm:
+    name: Build and Push Native ARM64 Docker Image
+    runs-on: [self-hosted, linux, arm64, graviton]
+    needs: build-native-arm
+    permissions:
+      contents: read
+      packages: write
+      
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Download native binary
+      uses: actions/download-artifact@v4
+      with:
+        name: native-binary-arm
+        path: target/
+        
+    - name: Make binary executable
+      run: chmod +x target/native-jpa-servlet
+      
     - name: Log in to GitHub Container Registry
       uses: docker/login-action@v3
       with:
-        registry: ghcr.io
+        registry: ${{ env.REGISTRY }}
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
         
-    - name: Build and push native ARM64 image
-      run: |
-        docker build \
-          --file Dockerfile.native \
-          --tag ghcr.io/adrianbp/spring-native-servlet-poc-native-arm:latest \
-          --tag ghcr.io/adrianbp/spring-native-servlet-poc-native-arm:${{ github.sha }} \
-          .
-        docker push ghcr.io/adrianbp/spring-native-servlet-poc-native-arm:latest
-        docker push ghcr.io/adrianbp/spring-native-servlet-poc-native-arm:${{ github.sha }}
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
           
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile.native
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+
+  deploy-native-arm:
+    name: Deploy Native ARM64 to Kubernetes
+    runs-on: ubuntu-latest
+    needs: build-docker-native-arm
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
