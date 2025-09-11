@@ -43,19 +43,6 @@ jobs:
     
     steps:
     - uses: actions/checkout@v4
-    
-    - name: Download Dynatrace OneAgent for ARM64
-      run: |
-        mkdir -p target/dynatrace/agent
-        if [ -n "$ENVIRONMENT_URL" ] && [ -n "$API_TOKEN" ]; then
-          curl -L -H "Authorization: Api-Token $API_TOKEN" "${ENVIRONMENT_URL}/api/v1/deployment/installer/agent/unix/paas/latest?flavor=default&arch=arm&include=golang,nodejs,php&bitness=64" -o dynatrace-agent.zip
-          unzip -o -d target/dynatrace dynatrace-agent.zip
-          rm dynatrace-agent.zip
-        else
-          echo "Dynatrace environment variables not set, creating placeholder files"
-          mkdir -p target/dynatrace/agent/lib64
-          echo "placeholder" > target/dynatrace/agent/installer.version
-        fi
       
     - name: Build native ARM64 binary
       run: mvn clean -Pnative native:compile
