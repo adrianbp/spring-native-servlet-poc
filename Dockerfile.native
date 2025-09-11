@@ -18,6 +18,9 @@ WORKDIR /app
 # Copy the native binary
 COPY target/native-jpa-servlet /app/native-jpa-servlet
 
+# Copy Dynatrace agent directory
+COPY target/dynatrace /app/dynatrace
+
 # Make the binary executable
 RUN chmod +x /app/native-jpa-servlet
 
