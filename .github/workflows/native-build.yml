@@ -59,14 +59,29 @@ jobs:
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
         restore-keys: ${{ runner.os }}-m2
         
+    - name: Download Dynatrace OneAgent
+      run: |
+        mkdir -p target/dynatrace/agent
+        if [ -n "$ENVIRONMENT_URL" ] && [ -n "$API_TOKEN" ]; then
+          curl -L -H "Authorization: Api-Token $API_TOKEN" "${ENVIRONMENT_URL}/api/v1/deployment/installer/agent/unix/paas/latest?flavor=default&arch=x86&include=golang,nodejs,php&bitness=64" -o dynatrace-agent.zip
+          unzip -o -d target/dynatrace dynatrace-agent.zip
+          rm dynatrace-agent.zip
+        else
+          echo "Dynatrace environment variables not set, creating placeholder files"
+          mkdir -p target/dynatrace/agent/lib64
+          echo "placeholder" > target/dynatrace/agent/installer.version
+        fi
+      
     - name: Build native image
       run: mvn clean -Pnative native:compile
       
-    - name: Upload native binary
+    - name: Upload native binary and Dynatrace agent
       uses: actions/upload-artifact@v4
       with:
-        name: native-binary
-        path: target/native-jpa-servlet
+        name: native-binary-and-dynatrace
+        path: |
+          target/native-jpa-servlet
+          target/dynatrace
         retention-days: 5
 
   build-docker-native:
@@ -80,14 +95,21 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Download native binary
+    - name: Download native binary and Dynatrace agent
       uses: actions/download-artifact@v4
       with:
-        name: native-binary
+        name: native-binary-and-dynatrace
         path: target/
         
     - name: Make binary executable
       run: chmod +x target/native-jpa-servlet
+      
+    - name: List target directory contents (Debug)
+      run: |
+        echo "Listing target directory:"
+        ls -la target/
+        echo "Listing Dynatrace directory:"
+        ls -la target/dynatrace/ || echo "Dynatrace directory not found"
       
     - name: Log in to Container Registry
       uses: docker/login-action@v3
